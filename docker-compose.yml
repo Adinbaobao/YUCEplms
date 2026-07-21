@@ -1,0 +1,86 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: plms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-plms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-plms_pass_2026}
+      POSTGRES_DB: ${DB_NAME:-plms}
+      TZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - plms-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./apps/backend/Dockerfile
+    container_name: plms-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${DB_USER:-plms}:${DB_PASSWORD:-plms_pass_2026}@postgres:5432/${DB_NAME:-plms}
+      JWT_SECRET: ${JWT_SECRET:-plms_jwt_secret_change_in_production_2026}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      UPLOAD_DIR: /app/uploads
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost,http://localhost:80}
+      OA_HMAC_SECRET: ${OA_HMAC_SECRET:-oa_hmac_secret_change_me}
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads:/app/uploads
+    command: sh -c "npx prisma migrate deploy && node dist/index.js"
+    networks:
+      - plms-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./apps/frontend/Dockerfile
+    container_name: plms-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - plms-net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: plms-pgadmin
+    restart: unless-stopped
+    profiles: ['dev']
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@yuce.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - plms-net
+
+volumes:
+  postgres_data:
+  uploads:
+
+networks:
+  plms-net:
+    driver: bridge

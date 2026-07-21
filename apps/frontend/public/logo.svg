@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 64" width="240" height="64">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <!-- Logo 图形：弧形 + 飞鸟 -->
+  <g transform="translate(8, 8)">
+    <path d="M 4 36 A 22 22 0 1 1 26 14" fill="none" stroke="#2563eb" stroke-width="6" stroke-linecap="round"/>
+    <path d="M 14 22 L 26 14 L 32 22" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="38" cy="18" r="2.5" fill="#f59e0b"/>
+    <circle cx="42" cy="14" r="1.5" fill="#f59e0b"/>
+    <circle cx="46" cy="10" r="1" fill="#f59e0b"/>
+  </g>
+  <!-- 文字 -->
+  <text x="68" y="34" font-family="-apple-system, 'Segoe UI', sans-serif" font-size="22" font-weight="700" fill="#0f172a">YUCE</text>
+  <text x="68" y="50" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#475569" letter-spacing="2">宇测科技</text>
+</svg>

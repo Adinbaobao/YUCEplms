@@ -1,0 +1,680 @@
+// ============================================
+// 宇测科技 PLMS - Prisma Schema
+// 数据库：PostgreSQL 16
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// 1. 用户与权限域
+// ============================================
+
+model Department {
+  id            String       @id @default(cuid())
+  name          String
+  code          String       @unique
+  parentId      String?
+  parent        Department?  @relation("DeptHierarchy", fields: [parentId], references: [id])
+  children      Department[] @relation("DeptHierarchy")
+  externalCode  String?      // OA 系统的部门代码
+  description   String?
+  sortOrder     Int          @default(0)
+  users         User[]
+  projects      Project[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  @@index([parentId])
+  @@index([code])
+  @@map("departments")
+}
+
+model User {
+  id              String          @id @default(cuid())
+  username        String          @unique
+  email           String          @unique
+  passwordHash    String
+  fullName        String
+  phone           String?
+  avatar          String?
+  status          String          @default("ACTIVE") // ACTIVE / INACTIVE / LOCKED
+  externalId      String?         // OA 系统员工 ID
+  lastLoginAt     DateTime?
+  departmentId    String?
+  department      Department?     @relation(fields: [departmentId], references: [id])
+  userRoles       UserRole[]
+  projectMembers  ProjectMember[]
+  ownedProjects   Project[]       @relation("ProjectOwner")
+  assignedTasks   Task[]          @relation("TaskAssignee")
+  ownedTasks      Task[]          @relation("TaskOwner")
+  ownedSubtasks   Subtask[]       @relation("SubtaskOwner")
+  subtaskUploads  SubtaskUpload[]
+  subtaskReviews  SubtaskReview[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+  projectLogs     ProjectLog[]
+  uploadedDocs    DocumentVersion[]
+  documentPerms   DocumentPermission[]
+  ownedDocs       Document[]
+  ownedRisks      Risk[]
+  assignedIssues  Issue[]         @relation("IssueAssignee")
+  reportedIssues  Issue[]         @relation("IssueReporter")
+  issueComments   IssueComment[]
+  budgetItems     BudgetItem[]
+  recordedCosts   ActualCost[]
+  closures        ProjectClosure[]
+  lessons         LessonLearned[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
+
+  @@index([username])
+  @@index([email])
+  @@index([departmentId])
+  @@index([externalId])
+  @@map("users")
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  code        String           @unique // ADMIN / PM / MEMBER
+  name        String
+  description String?
+  isSystem    Boolean          @default(false)
+  sortOrder   Int              @default(0)
+  permissions RolePermission[]
+  userRoles   UserRole[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id        String           @id @default(cuid())
+  code      String           @unique // 如 project:create / user:manage
+  module    String           // project / task / user 等
+  action    String           // create / read / update / delete / manage
+  name      String
+  roles     RolePermission[]
+  createdAt DateTime         @default(now())
+
+  @@index([module])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  // 可选：项目级角色
+  projectId String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, roleId, projectId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// ============================================
+// 2. 项目核心域
+// ============================================
+
+model Project {
+  id            String               @id @default(cuid())
+  code          String               @unique // 自动生成：YC-2026-RD-0007
+  name          String
+  description   String?
+  priority      String               @default("MEDIUM") // LOW / MEDIUM / HIGH / URGENT
+  status        String               @default("DRAFT") // ProjectStatus
+  budget        Decimal              @default(0) @db.Decimal(15, 2)
+  plannedStart  DateTime?
+  plannedEnd    DateTime?
+  actualStart   DateTime?
+  actualEnd     DateTime?
+  progress      Int                  @default(0) // 0-100
+  ownerId       String
+  owner         User                 @relation("ProjectOwner", fields: [ownerId], references: [id])
+  departmentId  String?
+  department    Department?          @relation(fields: [departmentId], references: [id])
+  parentId      String?
+  parent        Project?             @relation("ProjectHierarchy", fields: [parentId], references: [id])
+  children      Project[]            @relation("ProjectHierarchy")
+  members       ProjectMember[]
+  tasks         Task[]
+  documents     Document[]
+  risks         Risk[]
+  issues        Issue[]
+  budgetItems   BudgetItem[]
+  closures      ProjectClosure[]
+  lessons       LessonLearned[]
+  milestones    Milestone[]
+  application   ProjectApplication?
+  logs          ProjectLog[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  archivedAt    DateTime?
+  deletedAt     DateTime?
+
+  @@index([code])
+  @@index([status])
+  @@index([ownerId])
+  @@index([departmentId])
+  @@index([parentId])
+  @@index([plannedStart, plannedEnd])
+  @@map("projects")
+}
+
+model ProjectApplication {
+  id              String              @id @default(cuid())
+  projectId       String              @unique
+  project         Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  applicantId     String
+  reason          String?
+  expectedStart   DateTime?
+  expectedEnd     DateTime?
+  expectedBudget  Decimal?            @db.Decimal(15, 2)
+  attachments     Json?               // 附件 ID 列表
+  status          String              @default("PENDING") // PENDING / APPROVING / APPROVED / REJECTED / WITHDRAWN
+  currentStep     Int                 @default(1) // 多级审批当前步骤
+  approvals       ProjectApproval[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([status])
+  @@index([applicantId])
+  @@map("project_applications")
+}
+
+model ProjectApproval {
+  id            String              @id @default(cuid())
+  applicationId String
+  application   ProjectApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  approverId    String
+  step          Int                 // 1=部门负责人 / 2=管理层 / 3=财务
+  decision      String              // APPROVE / REJECT / HOLD
+  comment       String?
+  decidedAt     DateTime            @default(now())
+
+  @@index([applicationId])
+  @@index([approverId])
+  @@map("project_approvals")
+}
+
+model ProjectMember {
+  id          String   @id @default(cuid())
+  projectId   String
+  userId      String
+  projectRole String   @default("MEMBER") // OWNER / PM / SUB_LEAD / MEMBER / OBSERVER
+  allocation  Int      @default(100) // 0-100%
+  joinedAt    DateTime @default(now())
+  leftAt      DateTime?
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+model ProjectLog {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  action    String   // 动作类型
+  payload   Json?    // 上下文数据
+  message   String?  // 可读的描述
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([projectId, createdAt])
+  @@map("project_logs")
+}
+
+// ============================================
+// 3. 任务域（流程图核心）
+// ============================================
+
+model Task {
+  id              String              @id @default(cuid())
+  projectId       String
+  parentId        String?
+  name            String
+  description     String?
+  status          String              @default("NOT_STARTED") // NOT_STARTED / IN_PROGRESS / ON_HOLD / COMPLETED / CANCELED
+  priority        String              @default("MEDIUM")
+  progress        Int                 @default(0)
+  plannedStart    DateTime?
+  plannedEnd      DateTime?
+  actualStart     DateTime?
+  actualEnd       DateTime?
+  estimatedHours  Decimal?            @db.Decimal(8, 2)
+  actualHours     Decimal?            @db.Decimal(8, 2)
+  isMilestone     Boolean             @default(false)
+  sortOrder       Int                 @default(0)
+  assigneeId      String?
+  ownerId         String?
+  project         Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent          Task?               @relation("TaskHierarchy", fields: [parentId], references: [id])
+  children        Task[]              @relation("TaskHierarchy")
+  assignee        User?               @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  owner           User?               @relation("TaskOwner", fields: [ownerId], references: [id])
+  subtasks        Subtask[]
+  dependencies    TaskDependency[]   @relation("TaskFrom")
+  dependents      TaskDependency[]    @relation("TaskTo")
+  milestone       Milestone?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?
+
+  @@index([projectId])
+  @@index([parentId])
+  @@index([status])
+  @@index([assigneeId])
+  @@index([plannedStart, plannedEnd])
+  @@map("tasks")
+}
+
+model TaskDependency {
+  id          String   @id @default(cuid())
+  taskId      String   // 当前任务
+  dependsOnId String   // 前置任务
+  type        String   @default("FS") // FS / SS / FF / SF
+  task        Task     @relation("TaskFrom", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOn   Task     @relation("TaskTo", fields: [dependsOnId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([taskId, dependsOnId])
+  @@map("task_dependencies")
+}
+
+model Subtask {
+  id              String           @id @default(cuid())
+  taskId          String
+  name            String
+  description     String?
+  status          String           @default("UNCLAIMED") // SubtaskStatus 流程图核心
+  version         Int              @default(1)
+  ownerId         String
+  owner           User             @relation("SubtaskOwner", fields: [ownerId], references: [id])
+  task            Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploads         SubtaskUpload[]
+  reviews         SubtaskReview[]
+  claimedAt       DateTime?
+  completedAt     DateTime?
+  lastReviewId    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([taskId])
+  @@index([status])
+  @@index([ownerId])
+  @@map("subtasks")
+}
+
+model SubtaskUpload {
+  id           String     @id @default(cuid())
+  subtaskId    String
+  uploaderId   String
+  attachmentId String?
+  comment      String?
+  version      Int        // 第几版
+  subtask      Subtask    @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+  uploader     User       @relation(fields: [uploaderId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@index([subtaskId])
+  @@map("subtask_uploads")
+}
+
+model SubtaskReview {
+  id         String   @id @default(cuid())
+  subtaskId  String
+  reviewerId String
+  decision   String   // PASS / REJECT / HOLD / RELOCK
+  comment    String?
+  fromStatus String   // 决策前状态
+  toStatus   String   // 决策后状态
+  subtask    Subtask  @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+  reviewer   User     @relation(fields: [reviewerId], references: [id])
+  decidedAt  DateTime @default(now())
+
+  @@index([subtaskId])
+  @@map("subtask_reviews")
+}
+
+model Milestone {
+  id         String    @id @default(cuid())
+  projectId  String
+  taskId     String?   @unique
+  name       String
+  targetDate DateTime
+  status     String    @default("PENDING") // PENDING / REACHED / MISSED
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task       Task?     @relation(fields: [taskId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([targetDate])
+  @@map("milestones")
+}
+
+// ============================================
+// 4. 文档与资源域
+// ============================================
+
+model Document {
+  id               String               @id @default(cuid())
+  projectId        String
+  parentId         String?
+  name             String
+  type             String               @default("FILE") // FOLDER / FILE / LINK
+  category         String?              // PROPOSAL / REQUIREMENT / DESIGN / REPORT / CONTRACT / OTHER
+  tags             Json?                // 字符串数组
+  url              String?              // 外链
+  ownerId          String
+  currentVersion   Int                  @default(1)
+  project          Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent           Document?            @relation("DocHierarchy", fields: [parentId], references: [id])
+  children         Document[]           @relation("DocHierarchy")
+  owner            User                 @relation(fields: [ownerId], references: [id])
+  versions         DocumentVersion[]
+  permissions      DocumentPermission[]
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  deletedAt        DateTime?
+
+  @@index([projectId])
+  @@index([parentId])
+  @@index([type])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id           String    @id @default(cuid())
+  documentId   String
+  version      Int
+  attachmentId String?
+  uploaderId   String
+  changeLog    String?
+  size         Int?      // 字节
+  document     Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  uploader     User      @relation(fields: [uploaderId], references: [id])
+  createdAt    DateTime  @default(now())
+
+  @@unique([documentId, version])
+  @@index([documentId])
+  @@map("document_versions")
+}
+
+model DocumentPermission {
+  id            String   @id @default(cuid())
+  documentId    String
+  principalType String   // USER / ROLE / DEPARTMENT / PROJECT_ALL
+  principalId   String?  // 主键 ID（PROJECT_ALL 时为 null）
+  canRead       Boolean  @default(true)
+  canWrite      Boolean  @default(false)
+  canDelete     Boolean  @default(false)
+  document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId        String?  // 创建人（仅占位）
+  user          User?    @relation(fields: [userId], references: [id])
+  createdAt     DateTime @default(now())
+
+  @@index([documentId])
+  @@index([principalType, principalId])
+  @@map("document_permissions")
+}
+
+model Attachment {
+  id            String           @id @default(cuid())
+  name          String
+  originalName  String
+  mimeType      String
+  size          Int
+  storageKey    String           // 文件路径或 S3 key
+  storageType   String           @default("LOCAL") // LOCAL / S3
+  sha256        String?          // 秒传校验
+  uploaderId    String
+  createdAt     DateTime         @default(now())
+
+  @@index([sha256])
+  @@index([uploaderId])
+  @@map("attachments")
+}
+
+// ============================================
+// 5. 风险与问题域
+// ============================================
+
+model Risk {
+  id            String   @id @default(cuid())
+  projectId     String
+  title         String
+  description   String?
+  probability   Int      // 1-5
+  impact        Int      // 1-5
+  level         Int      // probability * impact
+  status        String   @default("IDENTIFIED") // IDENTIFIED / ANALYZED / MITIGATING / REALIZED / CLOSED
+  strategy      String?  // 应对策略
+  contingency   String?  // 应急方案
+  ownerId       String
+  identifiedAt  DateTime @default(now())
+  realizedAt    DateTime?
+  closedAt      DateTime?
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  owner         User     @relation(fields: [ownerId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([level])
+  @@map("risks")
+}
+
+model Issue {
+  id           String        @id @default(cuid())
+  projectId    String
+  title        String
+  description  String?
+  type         String        @default("OTHER") // BUG / CHANGE / BLOCKER / QUESTION / OTHER
+  priority     String        @default("MEDIUM")
+  status       String        @default("OPEN") // OPEN / IN_PROGRESS / RESOLVED / CLOSED
+  assigneeId   String?
+  reporterId   String
+  dueDate      DateTime?
+  resolvedAt   DateTime?
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee     User?         @relation("IssueAssignee", fields: [assigneeId], references: [id])
+  reporter     User          @relation("IssueReporter", fields: [reporterId], references: [id])
+  comments     IssueComment[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([assigneeId])
+  @@map("issues")
+}
+
+model IssueComment {
+  id        String   @id @default(cuid())
+  issueId   String
+  userId    String
+  content   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([issueId])
+  @@map("issue_comments")
+}
+
+// ============================================
+// 6. 成本与结项域
+// ============================================
+
+model BudgetItem {
+  id             String        @id @default(cuid())
+  projectId      String
+  category       String        // BudgetCategory
+  name           String
+  plannedAmount  Decimal       @db.Decimal(15, 2)
+  ownerId        String
+  note           String?
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  owner          User          @relation(fields: [ownerId], references: [id])
+  actualCosts    ActualCost[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  @@index([projectId])
+  @@index([category])
+  @@map("budget_items")
+}
+
+model ActualCost {
+  id            String      @id @default(cuid())
+  budgetItemId  String
+  amount        Decimal     @db.Decimal(15, 2)
+  occurredAt    DateTime
+  attachmentId  String?
+  recorderId    String
+  note          String?
+  budgetItem    BudgetItem  @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
+  recorder      User        @relation(fields: [recorderId], references: [id])
+  createdAt     DateTime    @default(now())
+
+  @@index([budgetItemId])
+  @@index([occurredAt])
+  @@map("actual_costs")
+}
+
+model ProjectClosure {
+  id            String   @id @default(cuid())
+  projectId     String
+  applicantId   String
+  summary       String?  // 结项总结
+  deliverables  Json?    // 交付物清单
+  achievements  String? // 关键成果
+  metrics       Json?    // KPI 数据
+  status        String   @default("DRAFT") // DRAFT / SUBMITTED / APPROVED / REJECTED
+  approverId    String?
+  approvedAt    DateTime?
+  rejectReason  String?
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  applicant     User     @relation(fields: [applicantId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@map("project_closures")
+}
+
+model LessonLearned {
+  id        String   @id @default(cuid())
+  projectId String
+  category  String   // WENT_WELL / WENT_POORLY / IMPROVEMENT
+  title     String
+  content   String
+  tags      Json?    // 字符串数组
+  authorId  String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([category])
+  @@map("lessons_learned")
+}
+
+// ============================================
+// 7. 通知与审计域
+// ============================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // NotificationType
+  title     String
+  content   String
+  link      String?
+  payload   Json?
+  readAt    DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  module       String
+  action       String
+  resourceType String?
+  resourceId   String?
+  before       Json?
+  after        Json?
+  ip           String?
+  userAgent    String?
+  user         User?    @relation(fields: [userId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([module, action])
+  @@index([resourceType, resourceId])
+  @@map("audit_logs")
+}
+
+model NumberSequence {
+  id        String   @id @default(cuid())
+  key       String   // 如 "PROJECT_2026_RD"
+  year      Int
+  current   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, year])
+  @@map("number_sequences")
+}
+
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_configs")
+}

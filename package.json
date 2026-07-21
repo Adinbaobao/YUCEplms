@@ -1,0 +1,34 @@
+{
+  "name": "plms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "宇测科技 - 项目全生命周期管理系统 (Project Lifecycle Management System)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run build:shared && concurrently -n backend,frontend -c blue,green \"npm run dev -w apps/backend\" \"npm run dev -w apps/frontend\"",
+    "build": "npm run build -w packages/shared && npm run build -w apps/backend && npm run build -w apps/frontend",
+    "build:shared": "npm run build -w packages/shared",
+    "build:backend": "npm run build -w apps/backend",
+    "build:frontend": "npm run build -w apps/frontend",
+    "lint": "eslint \"{apps,packages}/*/src/**/*.{ts,vue}\"",
+    "db:generate": "npm run db:generate -w apps/backend",
+    "db:migrate": "npm run db:migrate -w apps/backend",
+    "db:seed": "npm run db:seed -w apps/backend",
+    "db:studio": "npm run db:studio -w apps/backend",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.6.3",
+    "eslint": "^9.15.0",
+    "@types/node": "^22.10.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

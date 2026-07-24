@@ -23,7 +23,7 @@
     <!-- KPI 卡片 -->
     <el-row :gutter="16" class="kpi-row">
       <el-col :xs="12" :sm="12" :md="6" v-for="kpi in kpis" :key="kpi.label">
-        <div class="kpi-card plms-card" :style="{ '--kpi-color': kpi.color }">
+        <div class="kpi-card plms-card" :style="{ '--kpi-color': kpi.color }" @click="$router.push(kpi.to)">
           <div class="kpi-icon" :style="{ background: kpi.bg }">
             <el-icon :size="24" :color="kpi.color"><component :is="kpi.icon" /></el-icon>
           </div>
@@ -167,19 +167,19 @@ const greeting = computed(() => {
 const kpis = computed(() => [
   {
     label: '进行中项目', value: overview.value.kpi.activeProjects ?? '-',
-    icon: markRaw(Folder), color: '#2563eb', bg: '#eff6ff',
+    icon: markRaw(Folder), color: '#2563eb', bg: '#eff6ff', to: '/projects',
   },
   {
     label: '待我审批', value: overview.value.kpi.pendingApprovals ?? '-',
-    icon: markRaw(Document), color: '#f59e0b', bg: '#fef3c7',
+    icon: markRaw(Document), color: '#f59e0b', bg: '#fef3c7', to: '/applications',
   },
   {
     label: '我的子任务', value: overview.value.kpi.myPendingTasks ?? '-',
-    icon: markRaw(List), color: '#10b981', bg: '#d1fae5',
+    icon: markRaw(List), color: '#10b981', bg: '#d1fae5', to: '/subtasks',
   },
   {
     label: '未读消息', value: overview.value.kpi.unreadNotifications ?? '-',
-    icon: markRaw(Notification), color: '#8b5cf6', bg: '#ede9fe',
+    icon: markRaw(Notification), color: '#8b5cf6', bg: '#ede9fe', to: '/notifications',
   },
 ]);
 

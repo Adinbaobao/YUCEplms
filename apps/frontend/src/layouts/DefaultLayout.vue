@@ -3,9 +3,7 @@
     <!-- 侧边栏 -->
     <aside class="sidebar" :class="{ collapsed }">
       <div class="logo-area">
-        <div class="logo-icon">
-          <el-icon :size="24" color="#fff"><DataAnalysis /></el-icon>
-        </div>
+        <img :src="logoUrl" alt="宇测科技" class="logo-img" />
         <transition name="fade">
           <div v-show="!collapsed" class="logo-text">
             <div class="logo-name plms-gradient-text">宇测 PLMS</div>
@@ -22,7 +20,7 @@
         background-color="transparent"
         text-color="#cbd5e1"
         active-text-color="#ffffff"
-        router
+        @select="onMenuSelect"
       >
         <template v-for="route in menuRoutes" :key="route.path">
           <el-menu-item
@@ -131,8 +129,9 @@ import { useAuthStore } from '@/stores/auth';
 import { notificationApi } from '@/api/dashboard';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
-  Bell, CaretBottom, DataAnalysis, User, Key, SwitchButton, Fold, Expand,
+  Bell, CaretBottom, User, Key, SwitchButton, Fold, Expand,
 } from '@element-plus/icons-vue';
+import logoUrl from '@/assets/logo.png';
 
 const route = useRoute();
 const router = useRouter();
@@ -169,10 +168,14 @@ const menuRoutes = computed(() => {
 });
 
 const activeMenu = computed(() => {
-  // 匹配最长前缀
-  const matched = menuRoutes.value.filter((r) => route.path.startsWith(r.path));
-  return matched.length ? matched[matched.length - 1].path : route.path;
+  // 匹配最长前缀（menuRoutes 的 path 不带 /，route.path 带 /）
+  const matched = menuRoutes.value.filter((r) => route.path.startsWith('/' + r.path));
+  return matched.length ? '/' + matched[matched.length - 1].path : route.path;
 });
+
+const onMenuSelect = (index: string) => {
+  router.push('/' + index);
+};
 
 const roleLabel = computed(() => {
   const r = auth.roles[0];
@@ -251,14 +254,13 @@ onMounted(() => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   height: 64px;
 }
-.logo-icon {
+.logo-img {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: var(--plms-gradient);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 4px;
   flex-shrink: 0;
 }
 .logo-text { line-height: 1.2; }

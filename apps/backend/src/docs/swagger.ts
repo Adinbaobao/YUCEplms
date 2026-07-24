@@ -34,7 +34,7 @@ const spec = swaggerJsdoc({
       { name: 'Projects', description: '项目管理' },
     ],
   },
-  apis: ['./src/modules/**/*.routes.ts', './dist/modules/**/*.routes.js'],
+  apis: ['./apps/backend/src/modules/**/*.routes.ts'],
 });
 
 router.use('/', swaggerUi.serve);

@@ -39,6 +39,14 @@ const generateProjectCode = async (deptCode: string): Promise<string> => {
 // ============================================
 // 项目列表
 // ============================================
+/**
+ * @swagger
+ * /api/v1/projects:
+ *   get:
+ *     tags: [Projects]
+ *     summary: 项目列表（支持分页/搜索/筛选）
+ *     security: [{ bearerAuth: [] }]
+ */
 router.get(
   '/',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
@@ -83,6 +91,14 @@ router.get(
 // ============================================
 // WBS 任务树（必须在 /:id 前面）
 // ============================================
+/**
+ * @swagger
+ * /api/v1/projects/{projectId}/wbs:
+ *   get:
+ *     tags: [Projects]
+ *     summary: WBS 任务树
+ *     security: [{ bearerAuth: [] }]
+ */
 router.get(
   '/:projectId/wbs',
   asyncHandler(async (req, res) => {
@@ -115,6 +131,14 @@ router.get(
 // ============================================
 // 甘特图数据（必须在 /:id 前面）
 // ============================================
+/**
+ * @swagger
+ * /api/v1/projects/{projectId}/gantt:
+ *   get:
+ *     tags: [Projects]
+ *     summary: 甘特图数据
+ *     security: [{ bearerAuth: [] }]
+ */
 router.get(
   '/:projectId/gantt',
   asyncHandler(async (req, res) => {
@@ -242,6 +266,14 @@ router.get(
 // ============================================
 // 立项申请 —— 创建草稿
 // ============================================
+/**
+ * @swagger
+ * /api/v1/projects/applications:
+ *   post:
+ *     tags: [Projects]
+ *     summary: 提交立项申请
+ *     security: [{ bearerAuth: [] }]
+ */
 const createAppSchema = z.object({
   name: z.string().min(1, '项目名称不能为空'),
   description: z.string().optional(),
@@ -275,7 +307,7 @@ router.post(
           plannedStart: data.expectedStart ? new Date(data.expectedStart) : undefined,
           plannedEnd: data.expectedEnd ? new Date(data.expectedEnd) : undefined,
           ownerId: req.user!.userId,
-          departmentId: data.departmentId,
+          departmentId: data.departmentId || undefined,
         },
       });
       // 创建立项申请
@@ -328,6 +360,14 @@ router.post(
 // ============================================
 // 立项申请列表（ADMIN 可看所有，PM/MEMBER 看自己的）
 // ============================================
+/**
+ * @swagger
+ * /api/v1/projects/applications/list:
+ *   get:
+ *     tags: [Projects]
+ *     summary: 立项申请列表
+ *     security: [{ bearerAuth: [] }]
+ */
 router.get(
   '/applications/list',
   asyncHandler(async (req: AuthenticatedRequest, res) => {

@@ -55,6 +55,13 @@ import { useRoute } from 'vue-router';
 import { api } from '@/api';
 import { PROJECT_STATUS_LABELS, formatDate } from '@plms/shared';
 import { ElMessage } from 'element-plus';
+import ProjectOverview from './components/ProjectOverview.vue';
+import TaskManager from './components/TaskManager.vue';
+import GanttChart from './components/GanttChart.vue';
+import SubtaskPanel from './components/SubtaskPanel.vue';
+import MemberPanel from './components/MemberPanel.vue';
+import MilestonePanel from './components/MilestonePanel.vue';
+import LogTimeline from './components/LogTimeline.vue';
 
 const route = useRoute();
 const project = ref<any>(null);

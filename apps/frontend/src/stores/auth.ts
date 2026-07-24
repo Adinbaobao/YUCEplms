@@ -33,8 +33,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const login = async (username: string, password: string) => {
     const result = await authApi.login({ username, password });
-    setTokens(result.accessToken, result.refreshToken);
-    setUser(result.user);
+    const d = result.data;  // API 返回 {code,message,data:{accessToken,...}}
+    setTokens(d.accessToken, d.refreshToken);
+    setUser(d.user);
     return result;
   };
 

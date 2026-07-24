@@ -10,9 +10,7 @@
       <!-- 左侧品牌区 -->
       <div class="login-brand">
         <div class="brand-logo">
-          <div class="brand-icon">
-            <el-icon :size="56" color="#fff"><DataAnalysis /></el-icon>
-          </div>
+          <img :src="logoUrl" alt="宇测科技" class="brand-img" />
         </div>
         <h1 class="brand-title">宇测科技 PLMS</h1>
         <p class="brand-subtitle">项目全生命周期管理系统</p>
@@ -93,8 +91,9 @@
 import { ref, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
-import { User, Lock, DataAnalysis, Check } from '@element-plus/icons-vue';
+import { User, Lock, Check } from '@element-plus/icons-vue';
 import { useAuthStore } from '@/stores/auth';
+import logoUrl from '@/assets/logo.png';
 
 const router = useRouter();
 const route = useRoute();
@@ -183,15 +182,14 @@ const onSubmit = async () => {
   }
 }
 .brand-logo { margin-bottom: 24px; }
-.brand-icon {
-  width: 88px;
-  height: 88px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.brand-img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(8px);
 }
 .brand-title { font-size: 32px; font-weight: 700; margin: 0 0 8px; letter-spacing: 1px; }

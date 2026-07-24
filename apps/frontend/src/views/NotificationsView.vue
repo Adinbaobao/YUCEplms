@@ -16,7 +16,7 @@
           :key="n.id"
           class="notification-item"
           :class="{ unread: !n.readAt }"
-        >
+          @click="markRead(n)"
           <el-icon :size="20" :color="n.readAt ? '#94a3b8' : '#2563eb'"><Bell /></el-icon>
           <div class="notification-body">
             <div class="notification-title">{{ n.title }}</div>
@@ -47,6 +47,12 @@ const fetch = async () => {
 const markAllRead = async () => {
   await notificationApi.markRead();
   await fetch();
+};
+
+const markRead = async (n: any) => {
+  if (n.readAt) return;
+  await notificationApi.markRead([n.id]);
+  n.readAt = new Date().toISOString();
 };
 
 watch(activeTab, fetch);

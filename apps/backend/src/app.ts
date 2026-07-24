@@ -65,15 +65,17 @@ export const createApp = (): Application => {
   app.use('/api/v1/departments', deptRouter);
   app.use('/api/v1/roles', roleRouter);
   app.use('/api/v1/projects', projectRoutes);
-  app.use('/api/v1', taskRoutes);
   app.use('/api/v1/dashboard', dashboardRoutes);
   app.use('/api/v1/notifications', notificationRoutes);
 
-  // API 文档
+  // API 文档（必须在 /api/v1 通配路由前面）
   app.use('/api/v1/docs', swaggerRouter);
   app.get('/api/v1/docs.json', (_req, res) => {
     res.sendFile(path.join(__dirname, '../docs/openapi.json'));
   });
+
+  // 通配任务路由（/api/v1/*，必须在 docs 之后）
+  app.use('/api/v1', taskRoutes);
 
   // 错误处理
   app.use(notFoundHandler);

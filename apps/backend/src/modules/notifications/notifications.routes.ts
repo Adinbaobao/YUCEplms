@@ -9,6 +9,14 @@ const router = Router();
 
 router.use(authenticate);
 
+/**
+ * @swagger
+ * /api/v1/notifications:
+ *   get:
+ *     tags: [Notifications]
+ *     summary: 消息列表（支持分页和未读筛选）
+ *     security: [{ bearerAuth: [] }]
+ */
 router.get(
   '/',
   asyncHandler(async (req: any, res) => {
@@ -31,6 +39,14 @@ router.get(
   })
 );
 
+/**
+ * @swagger
+ * /api/v1/notifications/read:
+ *   post:
+ *     tags: [Notifications]
+ *     summary: 标记已读（传 ids 标记指定，不传全部已读）
+ *     security: [{ bearerAuth: [] }]
+ */
 router.post(
   '/read',
   asyncHandler(async (req: any, res) => {

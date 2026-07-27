@@ -104,8 +104,8 @@ const form = ref({
 });
 const rules = { name: [{ required: true, message: '请输入项目名称', trigger: 'blur' }] };
 
-const priorityTag = (p: string) => ({ LOW: 'info', MEDIUM: 'primary', HIGH: 'warning', URGENT: 'danger' }[p] || 'info');
-const statusTag = (s: string) => ({ DRAFT: 'info', APPROVED: 'success', IN_PROGRESS: 'primary', SUSPENDED: 'warning', REJECTED: 'danger', CLOSED: 'success' }[s] || 'info');
+const priorityTag = (p: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' => ({ LOW: 'info', MEDIUM: 'primary', HIGH: 'warning', URGENT: 'danger' }[p] || 'info') as any;
+const statusTag = (s: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' => ({ DRAFT: 'info', APPROVED: 'success', IN_PROGRESS: 'primary', SUSPENDED: 'warning', REJECTED: 'danger', CLOSED: 'success' }[s] || 'info') as any;
 const progressColors = [{ color: '#ef4444', percentage: 30 }, { color: '#f59e0b', percentage: 70 }, { color: '#10b981', percentage: 100 }];
 
 const fetch = async () => {

@@ -183,7 +183,7 @@ const kpis = computed(() => [
   },
 ]);
 
-const priorityType = (p: string) => ({ LOW: 'info', MEDIUM: 'primary', HIGH: 'warning', URGENT: 'danger' }[p] || 'info');
+const priorityType = (p: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' => ({ LOW: 'info', MEDIUM: 'primary', HIGH: 'warning', URGENT: 'danger' }[p] || 'info') as any;
 const priorityLabel = (p: string) => PRIORITY_LABELS[p]?.label || p;
 const formatDate = (d: string) => fmtDate(d);
 const progressColor = [

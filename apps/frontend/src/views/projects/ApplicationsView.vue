@@ -12,7 +12,7 @@
       </el-table-column>
       <el-table-column prop="project.department.name" label="部门" width="100" />
       <el-table-column prop="status" label="状态" width="100">
-        <template #default="{ row }"><el-tag :type="row.status==='PENDING'?'warning':row.status==='APPROVED'?'success':'danger'" size="small">{{ row.status }}</el-tag></template>
+        <template #default="{ row }"><el-tag :type="statusTag(row.status)" size="small">{{ row.status }}</el-tag></template>
       </el-table-column>
       <el-table-column label="操作" width="200">
         <template #default="{ row }">
@@ -38,7 +38,8 @@ const fetch = async () => {
   loading.value = true;
   try { const r: any = await api.get('/projects/applications/list'); items.value = r.data?.items || []; } finally { loading.value = false; }
 };
-const priorityTag = (p: string) => ({ LOW: 'info', MEDIUM: 'primary', HIGH: 'warning', URGENT: 'danger' }[p] || 'info');
+const priorityTag = (p: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' => ({ LOW: 'info', MEDIUM: 'primary', HIGH: 'warning', URGENT: 'danger' }[p] || 'info') as any;
+const statusTag = (s: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' => ({ PENDING: 'warning', APPROVED: 'success', REJECTED: 'danger' }[s] || 'info') as any;
 
 const approve = async (id: string, decision: string) => {
   const msg = decision === 'APPROVE' ? '通过' : '驳回';

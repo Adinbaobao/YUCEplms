@@ -86,7 +86,7 @@ const taskDates = ref<[string, string] | null>(null);
 const taskStatusLabels = TASK_STATUS_LABELS;
 
 const progressColors = [{ color: '#ef4444', percentage: 30 }, { color: '#f59e0b', percentage: 70 }, { color: '#10b981', percentage: 100 }];
-const statusTag = (s: string) => ({ NOT_STARTED: 'info', IN_PROGRESS: 'primary', ON_HOLD: 'warning', COMPLETED: 'success', CANCELED: 'danger' }[s] || 'info');
+const statusTag = (s: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' => ({ NOT_STARTED: 'info', IN_PROGRESS: 'primary', ON_HOLD: 'warning', COMPLETED: 'success', CANCELED: 'danger' }[s] || 'info') as any;
 
 // 扁平化树形结构
 const flattenTree = (nodes: any[], depth = 0): any[] => {

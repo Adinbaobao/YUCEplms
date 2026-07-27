@@ -68,7 +68,7 @@ const currentSubtaskId = ref('');
 const uploadComment = ref('');
 const createForm = ref({ name: '', ownerId: '', description: '' });
 
-const subStatusTag = (s: string) => ({ UNCLAIMED: 'info', CLAIMED: 'primary', UPLOADED: 'primary', UNDER_REVIEW: 'warning', APPROVED: 'success', REJECTED: 'danger', LOCKED: 'info', COMPLETED: 'success' }[s] || 'info');
+const subStatusTag = (s: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' => ({ UNCLAIMED: 'info', CLAIMED: 'primary', UPLOADED: 'primary', UNDER_REVIEW: 'warning', APPROVED: 'success', REJECTED: 'danger', LOCKED: 'info', COMPLETED: 'success' }[s] || 'info') as any;
 
 const fetch = async () => {
   loading.value = true;

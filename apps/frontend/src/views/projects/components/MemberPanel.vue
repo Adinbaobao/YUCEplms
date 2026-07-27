@@ -12,7 +12,7 @@
           <div class="member-meta">{{ m.user.email }} · {{ m.user.department?.name }}</div>
         </div>
         <div class="member-role">
-          <el-tag size="small">{{ { PM: '项目经理', SUB_LEAD: '子项负责人', MEMBER: '成员', OBSERVER: '观察者' }[m.projectRole] || m.projectRole }}</el-tag>
+          <el-tag size="small">{{ ({ PM: '项目经理', SUB_LEAD: '子项负责人', MEMBER: '成员', OBSERVER: '观察者' } as any)[m.projectRole] || m.projectRole }}</el-tag>
           <span v-if="m.allocation !== 100" style="font-size:11px;color:var(--plms-text-muted)">{{ m.allocation }}%</span>
         </div>
       </div>

@@ -38,7 +38,7 @@
 <script setup lang="ts">
 import { PRIORITY_LABELS, formatDate } from '@plms/shared';
 const props = defineProps<{ project: any; refresh: () => void }>();
-const priorityTag = (p: string) => ({ LOW: 'info', MEDIUM: 'primary', HIGH: 'warning', URGENT: 'danger' }[p] || 'info');
+const priorityTag = (p: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' => ({ LOW: 'info', MEDIUM: 'primary', HIGH: 'warning', URGENT: 'danger' }[p] || 'info') as any;
 </script>
 
 <style scoped>

@@ -68,7 +68,7 @@ const project = ref<any>(null);
 const activeTab = ref('overview');
 const statusLabels = PROJECT_STATUS_LABELS;
 
-const statusTag = (s: string) => ({ DRAFT: 'info', PENDING_REVIEW: 'warning', APPROVED: 'success', IN_PROGRESS: 'primary', SUSPENDED: 'warning', REJECTED: 'danger', READY_TO_CLOSE: 'success', CLOSED: 'info', ARCHIVED: 'info', CANCELED: 'danger' }[s] || 'info');
+const statusTag = (s: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' => ({ DRAFT: 'info', PENDING_REVIEW: 'warning', APPROVED: 'success', IN_PROGRESS: 'primary', SUSPENDED: 'warning', REJECTED: 'danger', READY_TO_CLOSE: 'success', CLOSED: 'info', ARCHIVED: 'info', CANCELED: 'danger' }[s] || 'info') as any;
 
 const refresh = async () => {
   const id = route.params.id as string;

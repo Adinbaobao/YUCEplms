@@ -16,7 +16,7 @@
           :key="n.id"
           class="notification-item"
           :class="{ unread: !n.readAt }"
-          @click="markRead(n)"
+          @click="markRead(n)">
           <el-icon :size="20" :color="n.readAt ? '#94a3b8' : '#2563eb'"><Bell /></el-icon>
           <div class="notification-body">
             <div class="notification-title">{{ n.title }}</div>

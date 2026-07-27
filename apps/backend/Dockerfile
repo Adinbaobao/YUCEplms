@@ -25,6 +25,9 @@ RUN npm run build:shared
 #    prisma generate 在 build 脚本中执行
 RUN cd apps/backend && npm run build
 
+# 6. 预生成 Swagger OpenAPI spec（编译后 JS 无源码注释，需从 TS 源生成）
+RUN cd apps/backend && npx tsx scripts/generate-swagger.ts
+
 # ============================================
 # Runtime 阶段：只保留运行时必需文件
 # ============================================
@@ -40,8 +43,8 @@ ENV NODE_ENV=production
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder /app/apps/backend/package.json ./apps/backend/
 
-# 后端依赖（含 Prisma Client）
-COPY --from=builder /app/apps/backend/node_modules ./apps/backend/node_modules
+# Swagger 预生成 spec（生产环境无源码，使用构建阶段产物）
+COPY --from=builder /app/apps/backend/dist/docs/openapi.json ./apps/backend/dist/docs/openapi.json
 
 # Prisma schema 和迁移文件（供 migrate deploy）
 COPY --from=builder /app/apps/backend/prisma ./apps/backend/prisma

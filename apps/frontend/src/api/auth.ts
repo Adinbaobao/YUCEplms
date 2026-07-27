@@ -14,6 +14,8 @@ export interface LoginResult {
     username: string;
     email: string;
     fullName: string;
+    phone?: string;
+    avatar?: string;
     roles: string[];
     permissions: string[];
     department?: { id: string; name: string };

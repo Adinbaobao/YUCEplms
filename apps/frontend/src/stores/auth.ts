@@ -51,9 +51,9 @@ export const useAuthStore = defineStore('auth', () => {
   const refresh = async () => {
     if (!refreshToken.value) return null;
     try {
-      const res = await authApi.refresh(refreshToken.value);
-      accessToken.value = res.accessToken;
-      localStorage.setItem(TOKEN_KEY, res.accessToken);
+      const res: any = await authApi.refresh(refreshToken.value);
+      accessToken.value = res.data.accessToken;
+      localStorage.setItem(TOKEN_KEY, res.data.accessToken);
       return res;
     } catch {
       logout();
@@ -69,6 +69,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   const hasPermission = (code: string) => permissions.value.includes(code);
   const hasRole = (role: string) => roles.value.includes(role);
+
+  const changePassword = async (oldPassword: string, newPassword: string) => {
+    return authApi.changePassword(oldPassword, newPassword);
+  };
 
   return {
     accessToken,
@@ -86,5 +90,6 @@ export const useAuthStore = defineStore('auth', () => {
     setUser,
     hasPermission,
     hasRole,
+    changePassword,
   };
 });
